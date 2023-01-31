@@ -1,6 +1,5 @@
-# Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
+# Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
-
 
 import frappe
 from frappe.utils import cint, flt, fmt_money, getdate, nowdate
@@ -111,6 +110,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 					"conversion_rate": 1,
 					"for_shopping_cart": True,
 					"currency": frappe.db.get_value("Price List", price_list, "currency"),
+					"doctype": "Quotation",
 				}
 			)
 

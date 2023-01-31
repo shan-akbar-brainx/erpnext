@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional, overload
 
 import frappe
 from frappe.utils import cint, flt
-from six import string_types
 
 import erpnext
 
@@ -86,7 +85,7 @@ def make_stock_entry(**args):
 	if args.apply_putaway_rule:
 		s.apply_putaway_rule = args.apply_putaway_rule
 
-	if isinstance(args.qty, string_types):
+	if isinstance(args.qty, str):
 		if "." in args.qty:
 			args.qty = flt(args.qty)
 		else:
@@ -118,6 +117,7 @@ def make_stock_entry(**args):
 			args.item = "_Test Item"
 
 	s.company = args.company or erpnext.get_default_company()
+	s.add_to_transit = args.add_to_transit or 0
 	s.purchase_receipt_no = args.purchase_receipt_no
 	s.delivery_note_no = args.delivery_note_no
 	s.sales_invoice_no = args.sales_invoice_no

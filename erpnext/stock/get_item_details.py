@@ -6,9 +6,9 @@ import json
 
 import frappe
 from frappe import _, throw
+from frappe.model import child_table_fields, default_fields
 from frappe.model.meta import get_field_precision
 from frappe.utils import add_days, add_months, cint, cstr, flt, getdate
-from six import iteritems, string_types
 
 from erpnext import get_company_currency
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import (
@@ -50,7 +50,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	        "transaction_date": None,
 	        "conversion_rate": 1.0,
 	        "buying_price_list": None,
-	        "is_subcontracted": "Yes" / "No",
+	        "is_subcontracted": 0/1,
 	        "ignore_pricing_rule": 0/1
 	        "project": ""
 	        "set_warehouse": ""
@@ -63,7 +63,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	item = frappe.get_cached_doc("Item", args.item_code)
 	validate_item_details(args, item)
 
-	if isinstance(doc, string_types):
+	if isinstance(doc, str):
 		doc = json.loads(doc)
 
 	if doc:
@@ -111,11 +111,11 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.update(bin_details)
 
 	# update args with out, if key or value not exists
-	for key, value in iteritems(out):
+	for key, value in out.items():
 		if args.get(key) is None:
 			args[key] = value
 
-	data = get_pricing_rule_for_item(args, out.price_list_rate, doc, for_validate=for_validate)
+	data = get_pricing_rule_for_item(args, doc=doc, for_validate=for_validate)
 
 	out.update(data)
 
@@ -124,7 +124,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	if args.transaction_date and item.lead_time_days:
 		out.schedule_date = out.lead_time_date = add_days(args.transaction_date, item.lead_time_days)
 
-	if args.get("is_subcontracted") == "Yes":
+	if args.get("is_subcontracted"):
 		out.bom = args.get("bom") or get_default_bom(args.item_code)
 
 	get_gross_profit(out)
@@ -132,7 +132,14 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.rate = args.rate or out.price_list_rate
 		out.amount = flt(args.qty) * flt(out.rate)
 
+	out = remove_standard_fields(out)
 	return out
+
+
+def remove_standard_fields(details):
+	for key in child_table_fields + default_fields:
+		details.pop(key, None)
+	return details
 
 
 def update_stock(args, out):
@@ -160,6 +167,9 @@ def update_stock(args, out):
 			reserved_so = get_so_reservation_for_item(args)
 			out.serial_no = get_serial_no(out, args.serial_no, sales_order=reserved_so)
 
+	if not out.serial_no:
+		out.pop("serial_no", None)
+
 
 def set_valuation_rate(out, args):
 	if frappe.db.exists("Product Bundle", args.item_code, cache=True):
@@ -181,7 +191,7 @@ def set_valuation_rate(out, args):
 
 
 def process_args(args):
-	if isinstance(args, string_types):
+	if isinstance(args, str):
 		args = json.loads(args)
 
 	args = frappe._dict(args)
@@ -189,7 +199,7 @@ def process_args(args):
 	if not args.get("price_list"):
 		args.price_list = args.get("selling_price_list") or args.get("buying_price_list")
 
-	if args.barcode:
+	if not args.item_code and args.barcode:
 		args.item_code = get_item_code(barcode=args.barcode)
 	elif not args.item_code and args.serial_no:
 		args.item_code = get_item_code(serial_no=args.serial_no)
@@ -199,7 +209,7 @@ def process_args(args):
 
 
 def process_string_args(args):
-	if isinstance(args, string_types):
+	if isinstance(args, str):
 		args = json.loads(args)
 	return args
 
@@ -232,8 +242,13 @@ def validate_item_details(args, item):
 		throw(_(msg), title=_("Template Item Selected"))
 
 	elif args.transaction_type == "buying" and args.doctype != "Material Request":
-		if args.get("is_subcontracted") == "Yes" and item.is_sub_contracted_item != 1:
-			throw(_("Item {0} must be a Sub-contracted Item").format(item.name))
+		if args.get("is_subcontracted"):
+			if args.get("is_old_subcontracting_flow"):
+				if item.is_sub_contracted_item != 1:
+					throw(_("Item {0} must be a Sub-contracted Item").format(item.name))
+			else:
+				if item.is_stock_item:
+					throw(_("Item {0} must be a Non-Stock Item").format(item.name))
 
 
 def get_basic_details(args, item, overwrite_warehouse=True):
@@ -253,7 +268,7 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 	                "transaction_date": None,
 	                "conversion_rate": 1.0,
 	                "buying_price_list": None,
-	                "is_subcontracted": "Yes" / "No",
+	                "is_subcontracted": 0/1,
 	                "ignore_pricing_rule": 0/1
 	                "project": "",
 	                barcode: "",
@@ -398,7 +413,9 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 	args.stock_qty = out.stock_qty
 
 	# calculate last purchase rate
-	if args.get("doctype") in purchase_doctypes:
+	if args.get("doctype") in purchase_doctypes and not frappe.db.get_single_value(
+		"Buying Settings", "disable_last_purchase_rate"
+	):
 		from erpnext.buying.doctype.purchase_order.purchase_order import item_last_purchase_rate
 
 		out.last_purchase_rate = item_last_purchase_rate(
@@ -800,6 +817,9 @@ def get_price_list_rate(args, item_doc, out=None):
 			flt(price_list_rate) * flt(args.plc_conversion_rate) / flt(args.conversion_rate)
 		)
 
+		if frappe.db.get_single_value("Buying Settings", "disable_last_purchase_rate"):
+			return out
+
 		if not out.price_list_rate and args.transaction_type == "buying":
 			from erpnext.stock.doctype.item.item import get_last_purchase_details
 
@@ -887,7 +907,7 @@ def get_item_price(args, item_code, ignore_party=False):
 	return frappe.db.sql(
 		""" select name, price_list_rate, uom
 		from `tabItem Price` {conditions}
-		order by valid_from desc, batch_no desc, uom desc """.format(
+		order by valid_from desc, ifnull(batch_no, '') desc, uom desc """.format(
 			conditions=conditions
 		),
 		args,
@@ -1310,7 +1330,7 @@ def apply_price_list_on_item(args):
 	item_doc = frappe.db.get_value("Item", args.item_code, ["name", "variant_of"], as_dict=1)
 	item_details = get_price_list_rate(args, item_doc)
 
-	item_details.update(get_pricing_rule_for_item(args, item_details.price_list_rate))
+	item_details.update(get_pricing_rule_for_item(args))
 
 	return item_details
 
@@ -1416,7 +1436,7 @@ def get_gross_profit(out):
 @frappe.whitelist()
 def get_serial_no(args, serial_nos=None, sales_order=None):
 	serial_no = None
-	if isinstance(args, string_types):
+	if isinstance(args, str):
 		args = json.loads(args)
 		args = frappe._dict(args)
 	if args.get("doctype") == "Sales Invoice" and not args.get("update_stock"):
@@ -1452,7 +1472,7 @@ def update_party_blanket_order(args, out):
 
 @frappe.whitelist()
 def get_blanket_order_details(args):
-	if isinstance(args, string_types):
+	if isinstance(args, str):
 		args = frappe._dict(json.loads(args))
 
 	blanket_order_details = None
