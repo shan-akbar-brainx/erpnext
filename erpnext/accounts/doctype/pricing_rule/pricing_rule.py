@@ -11,6 +11,7 @@ import frappe
 from frappe import _, throw
 from frappe.model.document import Document
 from frappe.utils import cint, flt, getdate
+from six import string_types
 
 apply_on_dict = {"Item Code": "items", "Item Group": "item_groups", "Brand": "brands"}
 
@@ -24,7 +25,6 @@ class PricingRule(Document):
 		self.validate_applicable_for_selling_or_buying()
 		self.validate_min_max_amt()
 		self.validate_min_max_qty()
-		self.validate_recursion()
 		self.cleanup_fields_value()
 		self.validate_rate_or_discount()
 		self.validate_max_discount()
@@ -109,18 +109,6 @@ class PricingRule(Document):
 	def validate_min_max_amt(self):
 		if self.min_amt and self.max_amt and flt(self.min_amt) > flt(self.max_amt):
 			throw(_("Min Amt can not be greater than Max Amt"))
-
-	def validate_recursion(self):
-		if self.price_or_product_discount != "Product":
-			return
-		if self.free_item or self.same_item:
-			if flt(self.recurse_for) <= 0:
-				self.recurse_for = 1
-		if self.is_recursive:
-			if flt(self.apply_recursion_over) > flt(self.min_qty):
-				throw(_("Min Qty should be greater than Recurse Over Qty"))
-			if flt(self.apply_recursion_over) < 0:
-				throw(_("Recurse Over Qty cannot be less than 0"))
 
 	def cleanup_fields_value(self):
 		for logic_field in ["apply_on", "applicable_for", "rate_or_discount"]:
@@ -221,7 +209,7 @@ def apply_pricing_rule(args, doc=None):
 	}
 	"""
 
-	if isinstance(args, str):
+	if isinstance(args, string_types):
 		args = json.loads(args)
 
 	args = frappe._dict(args)
@@ -256,7 +244,7 @@ def apply_pricing_rule(args, doc=None):
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
 		args_copy.update(item)
-		data = get_pricing_rule_for_item(args_copy, doc=doc)
+		data = get_pricing_rule_for_item(args_copy, item.get("price_list_rate"), doc=doc)
 		out.append(data)
 
 		if (
@@ -293,7 +281,7 @@ def update_pricing_rule_uom(pricing_rule, args):
 			pricing_rule.uom = row.uom
 
 
-def get_pricing_rule_for_item(args, doc=None, for_validate=False):
+def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=False):
 	from erpnext.accounts.doctype.pricing_rule.utils import (
 		get_applied_pricing_rules,
 		get_pricing_rule_items,
@@ -301,7 +289,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		get_product_discount_rule,
 	)
 
-	if isinstance(doc, str):
+	if isinstance(doc, string_types):
 		doc = json.loads(doc)
 
 	if doc:
@@ -347,7 +335,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 			if not pricing_rule:
 				continue
 
-			if isinstance(pricing_rule, str):
+			if isinstance(pricing_rule, string_types):
 				pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
 				update_pricing_rule_uom(pricing_rule, args)
 				pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule) or []
@@ -363,6 +351,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 			if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
 				item_details.update(
 					{
+						"apply_rule_on_other_items": json.dumps(pricing_rule.apply_rule_on_other_items),
 						"price_or_product_discount": pricing_rule.price_or_product_discount,
 						"apply_rule_on": (
 							frappe.scrub(pricing_rule.apply_rule_on_other)
@@ -371,9 +360,6 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 						),
 					}
 				)
-
-				if pricing_rule.apply_rule_on_other_items:
-					item_details["apply_rule_on_other_items"] = json.dumps(pricing_rule.apply_rule_on_other_items)
 
 			if pricing_rule.coupon_code_based == 1 and args.coupon_code == None:
 				return item_details
@@ -408,12 +394,12 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 
 def update_args_for_pricing_rule(args):
 	if not (args.item_group and args.brand):
-		item = frappe.get_cached_value("Item", args.item_code, ("item_group", "brand"))
-		if not item:
+		try:
+			args.item_group, args.brand = frappe.get_cached_value(
+				"Item", args.item_code, ["item_group", "brand"]
+			)
+		except frappe.DoesNotExistError:
 			return
-
-		args.item_group, args.brand = item
-
 		if not args.item_group:
 			frappe.throw(_("Item Group not mentioned in item master for item {0}").format(args.item_code))
 
@@ -523,7 +509,7 @@ def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None, ra
 			)
 
 		if pricing_rule.get("mixed_conditions") or pricing_rule.get("apply_rule_on_other"):
-			items = get_pricing_rule_items(pricing_rule, other_items=True)
+			items = get_pricing_rule_items(pricing_rule)
 			item_details.apply_on = (
 				frappe.scrub(pricing_rule.apply_rule_on_other)
 				if pricing_rule.apply_rule_on_other
@@ -539,7 +525,7 @@ def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None, ra
 
 @frappe.whitelist()
 def remove_pricing_rules(item_list):
-	if isinstance(item_list, str):
+	if isinstance(item_list, string_types):
 		item_list = json.loads(item_list)
 
 	out = []

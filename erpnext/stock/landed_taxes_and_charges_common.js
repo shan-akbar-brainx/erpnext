@@ -1,4 +1,4 @@
-let document_list = ['Landed Cost Voucher', 'Stock Entry', 'Subcontracting Order', 'Subcontracting Receipt'];
+let document_list = ['Landed Cost Voucher', 'Stock Entry'];
 
 document_list.forEach((doctype) => {
 	frappe.ui.form.on(doctype, {

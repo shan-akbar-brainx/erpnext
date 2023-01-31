@@ -2,8 +2,7 @@ import frappe
 
 
 def execute():
-	frappe.reload_doctype("Maintenance Visit")
-	frappe.reload_doctype("Maintenance Visit Purpose")
+	frappe.reload_doc("maintenance", "doctype", "maintenance_visit")
 
 	# Updates the Maintenance Schedule link to fetch serial nos
 	from frappe.query_builder.functions import Coalesce

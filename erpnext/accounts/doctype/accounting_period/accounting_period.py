@@ -49,9 +49,15 @@ class AccountingPeriod(Document):
 	@frappe.whitelist()
 	def get_doctypes_for_closing(self):
 		docs_for_closing = []
-		# get period closing doctypes from all the apps
-		doctypes = frappe.get_hooks("period_closing_doctypes")
-
+		doctypes = [
+			"Sales Invoice",
+			"Purchase Invoice",
+			"Journal Entry",
+			"Payroll Entry",
+			"Bank Clearance",
+			"Asset",
+			"Stock Entry",
+		]
 		closed_doctypes = [{"document_type": doctype, "closed": 1} for doctype in doctypes]
 		for closed_doctype in closed_doctypes:
 			docs_for_closing.append(closed_doctype)

@@ -37,13 +37,20 @@ def execute():
 	settings = frappe.get_doc("E Commerce Settings")
 
 	def map_into_e_commerce_settings(doctype, fields):
-		singles = frappe.qb.DocType("Singles")
-		query = (
-			frappe.qb.from_(singles)
-			.select(singles["field"], singles.value)
-			.where((singles.doctype == doctype) & (singles["field"].isin(fields)))
+		data = frappe.db.sql(
+			"""
+			Select
+				field, value
+			from `tabSingles`
+			where
+				doctype='{doctype}'
+				and field in ({fields})
+			""".format(
+				doctype=doctype, fields=(",").join(["%s"] * len(fields))
+			),
+			tuple(fields),
+			as_dict=1,
 		)
-		data = query.run(as_dict=True)
 
 		# {'enable_attribute_filters': '1', ...}
 		mapper = {row.field: row.value for row in data}
@@ -60,9 +67,14 @@ def execute():
 
 	# move filters and attributes tables to E Commerce Settings from Products Settings
 	for doctype in ("Website Filter Field", "Website Attribute"):
-		frappe.db.set_value(
-			doctype,
-			{"parent": "Products Settings"},
-			{"parenttype": "E Commerce Settings", "parent": "E Commerce Settings"},
-			update_modified=False,
+		frappe.db.sql(
+			"""Update `tab{doctype}`
+			set
+				parenttype = 'E Commerce Settings',
+				parent = 'E Commerce Settings'
+			where
+				parent = 'Products Settings'
+			""".format(
+				doctype=doctype
+			)
 		)

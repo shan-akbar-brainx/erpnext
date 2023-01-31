@@ -539,11 +539,19 @@ def make_gl_entries(
 			frappe.db.commit()
 		except Exception as e:
 			if frappe.flags.in_test:
-				doc.log_error(f"Error while processing deferred accounting for Invoice {doc.name}")
+				traceback = frappe.get_traceback()
+				frappe.log_error(
+					title=_("Error while processing deferred accounting for Invoice {0}").format(doc.name),
+					message=traceback,
+				)
 				raise e
 			else:
 				frappe.db.rollback()
-				doc.log_error(f"Error while processing deferred accounting for Invoice {doc.name}")
+				traceback = frappe.get_traceback()
+				frappe.log_error(
+					title=_("Error while processing deferred accounting for Invoice {0}").format(doc.name),
+					message=traceback,
+				)
 				frappe.flags.deferred_accounting_error = True
 
 
@@ -624,7 +632,12 @@ def book_revenue_via_journal_entry(
 		frappe.db.commit()
 	except Exception:
 		frappe.db.rollback()
-		doc.log_error(f"Error while processing deferred accounting for Invoice {doc.name}")
+		traceback = frappe.get_traceback()
+		frappe.log_error(
+			title=_("Error while processing deferred accounting for Invoice {0}").format(doc.name),
+			message=traceback,
+		)
+
 		frappe.flags.deferred_accounting_error = True
 
 

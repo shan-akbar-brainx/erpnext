@@ -11,11 +11,15 @@ def execute():
 		frappe.qb.from_(POSClosingEntry)
 		.select(POSClosingEntry.name)
 		.where(POSClosingEntry.docstatus == 0)
-		.run(pluck=True)
+		.run()
 	)
+	if open_pos_closing_entries:
+		open_pos_closing_entries = [d[0] for d in open_pos_closing_entries]
 
 	if not open_pos_closing_entries:
 		return
+
+	frappe.reload_doc("Accounts", "doctype", "pos_invoice_reference")
 
 	POSInvoiceReference = frappe.qb.DocType("POS Invoice Reference")
 	POSInvoice = frappe.qb.DocType("POS Invoice")

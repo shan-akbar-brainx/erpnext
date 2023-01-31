@@ -9,6 +9,7 @@ from frappe import _, throw
 from frappe.model.document import Document
 from frappe.utils import cint
 from frappe.utils.jinja import validate_template
+from six import string_types
 
 
 class TermsandConditions(Document):
@@ -26,7 +27,7 @@ class TermsandConditions(Document):
 
 @frappe.whitelist()
 def get_terms_and_conditions(template_name, doc):
-	if isinstance(doc, str):
+	if isinstance(doc, string_types):
 		doc = json.loads(doc)
 
 	terms_and_conditions = frappe.get_doc("Terms and Conditions", template_name)

@@ -3,7 +3,6 @@
 
 
 import frappe
-from frappe import _
 from frappe.model.document import Document
 
 
@@ -17,6 +16,6 @@ class CashFlowMapping(Document):
 		]
 		if len(checked_fields) > 1:
 			frappe.throw(
-				_("You can only select a maximum of one option from the list of check boxes."),
-				title=_("Error"),
+				frappe._("You can only select a maximum of one option from the list of check boxes."),
+				title="Error",
 			)

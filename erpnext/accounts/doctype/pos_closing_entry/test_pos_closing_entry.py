@@ -80,14 +80,9 @@ class TestPOSClosingEntry(unittest.TestCase):
 
 		pcv_doc.load_from_db()
 		pcv_doc.cancel()
-
-		cancelled_invoice = frappe.db.get_value(
-			"POS Invoice Merge Log", {"pos_closing_entry": pcv_doc.name}, "consolidated_invoice"
-		)
-		docstatus = frappe.db.get_value("Sales Invoice", cancelled_invoice, "docstatus")
-		self.assertEqual(docstatus, 2)
-
+		si_doc.load_from_db()
 		pos_inv1.load_from_db()
+		self.assertEqual(si_doc.docstatus, 2)
 		self.assertEqual(pos_inv1.status, "Paid")
 
 

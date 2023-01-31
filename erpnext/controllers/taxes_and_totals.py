@@ -6,7 +6,6 @@ import json
 
 import frappe
 from frappe import _, scrub
-from frappe.model.document import Document
 from frappe.utils import cint, flt, round_based_on_smallest_currency_fraction
 
 import erpnext
@@ -21,7 +20,7 @@ from erpnext.stock.get_item_details import _get_item_tax_template
 
 
 class calculate_taxes_and_totals(object):
-	def __init__(self, doc: Document):
+	def __init__(self, doc):
 		self.doc = doc
 		frappe.flags.round_off_applicable_accounts = []
 		get_round_off_applicable_accounts(self.doc.company, frappe.flags.round_off_applicable_accounts)
@@ -59,24 +58,11 @@ class calculate_taxes_and_totals(object):
 		self.initialize_taxes()
 		self.determine_exclusive_rate()
 		self.calculate_net_total()
-		self.calculate_tax_withholding_net_total()
 		self.calculate_taxes()
 		self.manipulate_grand_total_for_inclusive_tax()
 		self.calculate_totals()
 		self._cleanup()
 		self.calculate_total_net_weight()
-
-	def calculate_tax_withholding_net_total(self):
-		if hasattr(self.doc, "tax_withholding_net_total"):
-			sum_net_amount = 0
-			sum_base_net_amount = 0
-			for item in self.doc.get("items"):
-				if hasattr(item, "apply_tds") and item.apply_tds:
-					sum_net_amount += item.net_amount
-					sum_base_net_amount += item.base_net_amount
-
-			self.doc.tax_withholding_net_total = sum_net_amount
-			self.doc.base_tax_withholding_net_total = sum_base_net_amount
 
 	def validate_item_tax_template(self):
 		for item in self.doc.get("items"):
@@ -233,7 +219,7 @@ class calculate_taxes_and_totals(object):
 			self.doc.round_floats_in(tax)
 
 	def determine_exclusive_rate(self):
-		if not any(cint(tax.included_in_print_rate) for tax in self.doc.get("taxes")):
+		if not any((cint(tax.included_in_print_rate) for tax in self.doc.get("taxes"))):
 			return
 
 		for item in self.doc.get("items"):
@@ -678,7 +664,7 @@ class calculate_taxes_and_totals(object):
 			)
 
 	def calculate_total_advance(self):
-		if not self.doc.docstatus.is_cancelled():
+		if self.doc.docstatus < 2:
 			total_allocated_amount = sum(
 				flt(adv.allocated_amount, adv.precision("allocated_amount"))
 				for adv in self.doc.get("advances")
@@ -709,7 +695,7 @@ class calculate_taxes_and_totals(object):
 					)
 				)
 
-			if self.doc.docstatus.is_draft():
+			if self.doc.docstatus == 0:
 				if self.doc.get("write_off_outstanding_amount_automatically"):
 					self.doc.write_off_amount = 0
 
@@ -837,6 +823,7 @@ class calculate_taxes_and_totals(object):
 			and not self.doc.is_return
 			and any(d.type == "Cash" for d in self.doc.payments)
 		):
+
 			self.doc.change_amount = flt(
 				self.doc.paid_amount - grand_total, self.doc.precision("change_amount")
 			)
@@ -1057,7 +1044,7 @@ class init_landed_taxes_and_totals(object):
 		company_currency = erpnext.get_company_currency(self.doc.company)
 		for d in self.doc.get(self.tax_field):
 			if not d.account_currency:
-				account_currency = frappe.get_cached_value("Account", d.expense_account, "account_currency")
+				account_currency = frappe.db.get_value("Account", d.expense_account, "account_currency")
 				d.account_currency = account_currency or company_currency
 
 	def set_exchange_rate(self):

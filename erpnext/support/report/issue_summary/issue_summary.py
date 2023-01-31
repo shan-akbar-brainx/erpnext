@@ -7,6 +7,7 @@ import json
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt
+from six import iteritems
 
 
 def execute(filters=None):
@@ -79,8 +80,7 @@ class IssueSummary(object):
 		self.sla_status_map = {
 			"SLA Failed": "failed",
 			"SLA Fulfilled": "fulfilled",
-			"First Response Due": "first_response_due",
-			"Resolution Due": "resolution_due",
+			"SLA Ongoing": "ongoing",
 		}
 
 		for label, fieldname in self.sla_status_map.items():
@@ -148,7 +148,7 @@ class IssueSummary(object):
 		self.data = []
 		self.get_summary_data()
 
-		for entity, data in self.issue_summary_data.items():
+		for entity, data in iteritems(self.issue_summary_data):
 			if self.filters.based_on == "Customer":
 				row = {"customer": entity}
 			elif self.filters.based_on == "Assigned To":

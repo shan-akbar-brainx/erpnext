@@ -70,7 +70,8 @@ class SocialMediaPost(Document):
 
 		except Exception:
 			self.db_set("post_status", "Error")
-			self.log_error("Social posting failed")
+			title = _("Error while POSTING {0}").format(self.name)
+			frappe.log_error(message=frappe.get_traceback(), title=title)
 
 
 def process_scheduled_social_media_posts():

@@ -129,7 +129,6 @@ class TestShoppingCart(unittest.TestCase):
 		self.assertEqual(quotation.net_total, 20)
 		self.assertEqual(len(quotation.get("items")), 1)
 
-	@unittest.skip("Flaky in CI")
 	def test_tax_rule(self):
 		self.create_tax_rule()
 		self.login_as_customer()
@@ -140,7 +139,7 @@ class TestShoppingCart(unittest.TestCase):
 		tax_rule_master = set_taxes(
 			quotation.party_name,
 			"Customer",
-			None,
+			quotation.transaction_date,
 			quotation.company,
 			customer_group=None,
 			supplier_group=None,
@@ -216,7 +215,7 @@ class TestShoppingCart(unittest.TestCase):
 	def create_tax_rule(self):
 		tax_rule = frappe.get_test_records("Tax Rule")[0]
 		try:
-			frappe.get_doc(tax_rule).insert(ignore_if_duplicate=True)
+			frappe.get_doc(tax_rule).insert()
 		except (frappe.DuplicateEntryError, ConflictingTaxRule):
 			pass
 

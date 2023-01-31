@@ -4,6 +4,7 @@ Buying
 Projects
 Selling
 Setup
+HR
 Manufacturing
 Stock
 Support
@@ -11,12 +12,18 @@ Utilities
 Assets
 Portal
 Maintenance
+Education
 Regional
+Healthcare
+Restaurant
+Agriculture
 ERPNext Integrations
+Non Profit
+Hotels
+Hub Node
 Quality Management
 Communication
 Loan Management
+Payroll
 Telephony
-Bulk Transaction
 E-commerce
-Subcontracting

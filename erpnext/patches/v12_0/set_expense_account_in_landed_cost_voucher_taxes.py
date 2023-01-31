@@ -1,4 +1,5 @@
 import frappe
+from six import iteritems
 
 
 def execute():
@@ -12,7 +13,7 @@ def execute():
 		)
 	)
 
-	for company, account in company_account_map.items():
+	for company, account in iteritems(company_account_map):
 		frappe.db.sql(
 			"""
 			UPDATE

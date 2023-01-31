@@ -33,6 +33,7 @@
   "amount",
   "base_amount",
   "section_break_18",
+  "scrap",
   "qty_consumed_per_unit",
   "section_break_27",
   "has_variants",
@@ -222,6 +223,15 @@
   {
    "fieldname": "section_break_18",
    "fieldtype": "Section Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "scrap",
+   "fieldtype": "Float",
+   "label": "Scrap %",
+   "oldfieldname": "scrap",
+   "oldfieldtype": "Currency",
+   "print_hide": 1
   },
   {
    "fieldname": "qty_consumed_per_unit",

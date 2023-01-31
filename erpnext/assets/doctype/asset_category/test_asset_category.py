@@ -26,7 +26,7 @@ class TestAssetCategory(unittest.TestCase):
 		)
 
 		try:
-			asset_category.insert(ignore_if_duplicate=True)
+			asset_category.insert()
 		except frappe.DuplicateEntryError:
 			pass
 

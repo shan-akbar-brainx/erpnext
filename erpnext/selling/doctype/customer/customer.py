@@ -6,7 +6,7 @@ import json
 
 import frappe
 import frappe.defaults
-from frappe import _, msgprint, qb
+from frappe import _, msgprint
 from frappe.contacts.address_and_contact import (
 	delete_contact_and_address,
 	load_address_and_contact,
@@ -294,7 +294,7 @@ class Customer(TransactionBase):
 
 	def after_rename(self, olddn, newdn, merge=False):
 		if frappe.defaults.get_global_default("cust_master_name") == "Customer Name":
-			self.db_set("customer_name", newdn)
+			frappe.db.set(self, "customer_name", newdn)
 
 	def set_loyalty_program(self):
 		if self.loyalty_program:
@@ -527,13 +527,10 @@ def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, 
 					_("Please contact your administrator to extend the credit limits for {0}.").format(customer)
 				)
 
-			user_list = "<br><br><ul><li>{0}</li></ul>".format(
-				"<li>".join(credit_controller_users_formatted)
+			message = """Please contact any of the following users to extend the credit limits for {0}:
+				<br><br><ul><li>{1}</li></ul>""".format(
+				customer, "<li>".join(credit_controller_users_formatted)
 			)
-
-			message = _(
-				"Please contact any of the following users to extend the credit limits for {0}: {1}"
-			).format(customer, user_list)
 
 			# if the current user does not have permissions to override credit limit,
 			# prompt them to send out an email to the controller users
@@ -732,15 +729,12 @@ def make_address(args, is_primary_address=1):
 @frappe.validate_and_sanitize_search_inputs
 def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, filters):
 	customer = filters.get("customer")
-
-	con = qb.DocType("Contact")
-	dlink = qb.DocType("Dynamic Link")
-
-	return (
-		qb.from_(con)
-		.join(dlink)
-		.on(con.name == dlink.parent)
-		.select(con.name, con.email_id)
-		.where((dlink.link_name == customer) & (con.name.like(f"%{txt}%")))
-		.run()
+	return frappe.db.sql(
+		"""
+		select `tabContact`.name from `tabContact`, `tabDynamic Link`
+			where `tabContact`.name = `tabDynamic Link`.parent and `tabDynamic Link`.link_name = %(customer)s
+			and `tabDynamic Link`.link_doctype = 'Customer'
+			and `tabContact`.name like %(txt)s
+		""",
+		{"customer": customer, "txt": "%%%s%%" % txt},
 	)

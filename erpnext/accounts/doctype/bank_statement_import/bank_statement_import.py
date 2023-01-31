@@ -15,6 +15,7 @@ from frappe.utils.background_jobs import enqueue
 from frappe.utils.xlsxutils import ILLEGAL_CHARACTERS_RE, handle_html
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
+from six import string_types
 
 INVALID_VALUES = ("", None)
 
@@ -136,7 +137,7 @@ def start_import(
 	except Exception:
 		frappe.db.rollback()
 		data_import.db_set("status", "Error")
-		data_import.log_error("Bank Statement Import failed")
+		frappe.log_error(title=data_import.name)
 	finally:
 		frappe.flags.in_import = False
 
@@ -202,12 +203,14 @@ def write_xlsx(data, sheet_name, wb=None, column_widths=None, file_path=None):
 	for row in data:
 		clean_row = []
 		for item in row:
-			if isinstance(item, str) and (sheet_name not in ["Data Import Template", "Data Export"]):
+			if isinstance(item, string_types) and (
+				sheet_name not in ["Data Import Template", "Data Export"]
+			):
 				value = handle_html(item)
 			else:
 				value = item
 
-			if isinstance(item, str) and next(ILLEGAL_CHARACTERS_RE.finditer(value), None):
+			if isinstance(item, string_types) and next(ILLEGAL_CHARACTERS_RE.finditer(value), None):
 				# Remove illegal characters from the string
 				value = re.sub(ILLEGAL_CHARACTERS_RE, "", value)
 

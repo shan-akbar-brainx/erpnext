@@ -2,16 +2,13 @@
 # For license information, please see license.txt
 
 
-from urllib.parse import urlencode
-
 import frappe
 import gocardless_pro
 from frappe import _
-from frappe.integrations.utils import create_request_log
+from frappe.integrations.utils import create_payment_gateway, create_request_log
 from frappe.model.document import Document
 from frappe.utils import call_hook_method, cint, flt, get_url
-
-from erpnext.utilities import payment_app_import_guard
+from six.moves.urllib.parse import urlencode
 
 
 class GoCardlessSettings(Document):
@@ -31,9 +28,6 @@ class GoCardlessSettings(Document):
 			frappe.throw(e)
 
 	def on_update(self):
-		with payment_app_import_guard():
-			from payments.utils import create_payment_gateway
-
 		create_payment_gateway(
 			"GoCardless-" + self.gateway_name, settings="GoCardLess Settings", controller=self.gateway_name
 		)
@@ -112,7 +106,7 @@ class GoCardlessSettings(Document):
 			return self.create_charge_on_gocardless()
 
 		except Exception:
-			frappe.log_error("Gocardless payment reqeust failed")
+			frappe.log_error(frappe.get_traceback())
 			return {
 				"redirect_to": frappe.redirect_to_message(
 					_("Server Error"),
@@ -168,15 +162,21 @@ class GoCardlessSettings(Document):
 				or payment.status == "charged_back"
 			):
 				self.integration_request.db_set("status", "Cancelled", update_modified=False)
-				frappe.log_error("Gocardless payment cancelled")
+				frappe.log_error(
+					_("Payment Cancelled. Please check your GoCardless Account for more details"),
+					"GoCardless Payment Error",
+				)
 				self.integration_request.db_set("error", payment.status, update_modified=False)
 			else:
 				self.integration_request.db_set("status", "Failed", update_modified=False)
-				frappe.log_error("Gocardless payment failed")
+				frappe.log_error(
+					_("Payment Failed. Please check your GoCardless Account for more details"),
+					"GoCardless Payment Error",
+				)
 				self.integration_request.db_set("error", payment.status, update_modified=False)
 
 		except Exception as e:
-			frappe.log_error("GoCardless Payment Error")
+			frappe.log_error(e, "GoCardless Payment Error")
 
 		if self.flags.status_changed_to == "Completed":
 			status = "Completed"
@@ -187,7 +187,7 @@ class GoCardlessSettings(Document):
 						self.data.get("reference_doctype"), self.data.get("reference_docname")
 					).run_method("on_payment_authorized", self.flags.status_changed_to)
 				except Exception:
-					frappe.log_error("Gocardless redirect failed")
+					frappe.log_error(frappe.get_traceback())
 
 				if custom_redirect_to:
 					redirect_to = custom_redirect_to

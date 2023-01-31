@@ -5,6 +5,7 @@
 import frappe
 from frappe import _, scrub
 from frappe.utils import cint, flt
+from six import iteritems
 
 from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
@@ -49,7 +50,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if self.filters.show_gl_balance:
 			gl_balance_map = get_gl_balance(self.filters.report_date)
 
-		for party, party_dict in self.party_total.items():
+		for party, party_dict in iteritems(self.party_total):
 			if party_dict.outstanding == 0:
 				continue
 
@@ -121,9 +122,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if row.sales_person:
 			self.party_total[row.party].sales_person.append(row.sales_person)
 
-		if self.filters.sales_partner:
-			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner")
-
 	def get_columns(self):
 		self.columns = []
 		self.add_column(
@@ -163,10 +161,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			)
 			if self.filters.show_sales_person:
 				self.add_column(label=_("Sales Person"), fieldname="sales_person", fieldtype="Data")
-
-			if self.filters.sales_partner:
-				self.add_column(label=_("Sales Partner"), fieldname="default_sales_partner", fieldtype="Data")
-
 		else:
 			self.add_column(
 				label=_("Supplier Group"),

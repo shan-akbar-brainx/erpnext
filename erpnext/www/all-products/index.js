@@ -8,10 +8,12 @@ $(() => {
 			let view_type = localStorage.getItem("product_view") || "List View";
 
 			// Render Product Views, Filters & Search
-			new erpnext.ProductView({
-				view_type: view_type,
-				products_section: $('#product-listing'),
-				item_group: me.item_group
+			frappe.require('/assets/js/e-commerce.min.js', function() {
+				new erpnext.ProductView({
+					view_type: view_type,
+					products_section: $('#product-listing'),
+					item_group: me.item_group
+				});
 			});
 
 			this.bind_card_actions();

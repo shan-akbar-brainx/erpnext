@@ -82,6 +82,7 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 			currency="USD",
 			customer="_Test Customer USD",
 		)
+
 		create_sales_invoice(
 			company=company,
 			cost_center=cost_center2,
@@ -114,7 +115,7 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 			(pcv.name),
 		)
 
-		self.assertSequenceEqual(pcv_gle, expected_gle)
+		self.assertEqual(pcv_gle, expected_gle)
 
 		pcv.reload()
 		pcv.cancel()
@@ -175,7 +176,7 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 			(pcv.name),
 		)
 
-		self.assertSequenceEqual(pcv_gle, expected_gle)
+		self.assertEqual(pcv_gle, expected_gle)
 
 	def make_period_closing_voucher(self, submit=True):
 		surplus_account = create_account()

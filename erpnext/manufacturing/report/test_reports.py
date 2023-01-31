@@ -55,11 +55,10 @@ class TestManufacturingReports(unittest.TestCase):
 	def test_execute_all_manufacturing_reports(self):
 		"""Test that all script report in manufacturing modules are executable with supported filters"""
 		for report, filter in REPORT_FILTER_TEST_CASES:
-			with self.subTest(report=report):
-				execute_script_report(
-					report_name=report,
-					module="Manufacturing",
-					filters=filter,
-					default_filters=DEFAULT_FILTERS,
-					optional_filters=OPTIONAL_FILTERS if filter.get("_optional") else None,
-				)
+			execute_script_report(
+				report_name=report,
+				module="Manufacturing",
+				filters=filter,
+				default_filters=DEFAULT_FILTERS,
+				optional_filters=OPTIONAL_FILTERS if filter.get("_optional") else None,
+			)

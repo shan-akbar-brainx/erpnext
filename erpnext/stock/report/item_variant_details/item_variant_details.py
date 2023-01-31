@@ -71,7 +71,7 @@ def get_columns(item):
 	columns = [
 		{
 			"fieldname": "variant_name",
-			"label": _("Variant"),
+			"label": "Variant",
 			"fieldtype": "Link",
 			"options": "Item",
 			"width": 200,

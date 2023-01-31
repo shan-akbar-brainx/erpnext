@@ -2,16 +2,12 @@
 # For license information, please see license.txt
 
 import frappe
+import stripe
 from frappe import _
 from frappe.integrations.utils import create_request_log
 
-from erpnext.utilities import payment_app_import_guard
-
 
 def create_stripe_subscription(gateway_controller, data):
-	with payment_app_import_guard():
-		import stripe
-
 	stripe_settings = frappe.get_doc("Stripe Settings", gateway_controller)
 	stripe_settings.data = frappe._dict(data)
 
@@ -26,7 +22,7 @@ def create_stripe_subscription(gateway_controller, data):
 		return create_subscription_on_stripe(stripe_settings)
 
 	except Exception:
-		stripe_settings.log_error("Unable to create Stripe subscription")
+		frappe.log_error(frappe.get_traceback())
 		return {
 			"redirect_to": frappe.redirect_to_message(
 				_("Server Error"),
@@ -39,9 +35,6 @@ def create_stripe_subscription(gateway_controller, data):
 
 
 def create_subscription_on_stripe(stripe_settings):
-	with payment_app_import_guard():
-		import stripe
-
 	items = []
 	for payment_plan in stripe_settings.payment_plans:
 		plan = frappe.db.get_value("Subscription Plan", payment_plan.plan, "product_price_id")
@@ -62,9 +55,9 @@ def create_subscription_on_stripe(stripe_settings):
 
 		else:
 			stripe_settings.integration_request.db_set("status", "Failed", update_modified=False)
-			frappe.log_error(f"Stripe Subscription ID {subscription.id}: Payment failed")
+			frappe.log_error("Subscription N°: " + subscription.id, "Stripe Payment not completed")
 	except Exception:
 		stripe_settings.integration_request.db_set("status", "Failed", update_modified=False)
-		stripe_settings.log_error("Unable to create Stripe subscription")
+		frappe.log_error(frappe.get_traceback())
 
 	return stripe_settings.finalize_request()

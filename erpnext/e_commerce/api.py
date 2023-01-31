@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
@@ -56,7 +55,8 @@ def get_product_filter_data(query_args=None):
 			attribute_filters, field_filters, search_term=search, start=start, item_group=item_group
 		)
 	except Exception:
-		frappe.log_error("Product query with filter failed")
+		traceback = frappe.get_traceback()
+		frappe.log_error(traceback, frappe._("Product Engine Error"))
 		return {"exc": "Something went wrong!"}
 
 	# discount filter data

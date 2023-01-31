@@ -75,12 +75,13 @@ frappe.ui.form.on("Item Group", {
 		frappe.model.with_doctype('Website Item', () => {
 			const web_item_meta = frappe.get_meta('Website Item');
 
-			const valid_fields = web_item_meta.fields.filter(df =>
-				['Link', 'Table MultiSelect'].includes(df.fieldtype) && !df.hidden
-			).map(df =>
-				({ label: df.label, value: df.fieldname })
-			);
+			const valid_fields = web_item_meta.fields.filter(
+				df => ['Link', 'Table MultiSelect'].includes(df.fieldtype) && !df.hidden
+			).map(df => ({ label: df.label, value: df.fieldname }));
 
+			frm.get_field("filter_fields").grid.update_docfield_property(
+				'fieldname', 'fieldtype', 'Select'
+			);
 			frm.get_field("filter_fields").grid.update_docfield_property(
 				'fieldname', 'options', valid_fields
 			);

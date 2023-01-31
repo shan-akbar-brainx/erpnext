@@ -5,6 +5,7 @@
 import frappe
 from frappe import _, scrub
 from frappe.utils import getdate, nowdate
+from six import iteritems, itervalues
 
 
 class PartyLedgerSummaryReport(object):
@@ -229,7 +230,7 @@ class PartyLedgerSummaryReport(object):
 					self.party_data[gle.party].paid_amount -= amount
 
 		out = []
-		for party, row in self.party_data.items():
+		for party, row in iteritems(self.party_data):
 			if (
 				row.opening_balance
 				or row.invoiced_amount
@@ -238,7 +239,7 @@ class PartyLedgerSummaryReport(object):
 				or row.closing_amount
 			):
 				total_party_adjustment = sum(
-					amount for amount in self.party_adjustment_details.get(party, {}).values()
+					amount for amount in itervalues(self.party_adjustment_details.get(party, {}))
 				)
 				row.paid_amount -= total_party_adjustment
 
@@ -403,7 +404,7 @@ class PartyLedgerSummaryReport(object):
 			adjustment_voucher_entries.setdefault((gle.voucher_type, gle.voucher_no), [])
 			adjustment_voucher_entries[(gle.voucher_type, gle.voucher_no)].append(gle)
 
-		for voucher_gl_entries in adjustment_voucher_entries.values():
+		for voucher_gl_entries in itervalues(adjustment_voucher_entries):
 			parties = {}
 			accounts = {}
 			has_irrelevant_entry = False
@@ -423,7 +424,7 @@ class PartyLedgerSummaryReport(object):
 			if parties and accounts:
 				if len(parties) == 1:
 					party = list(parties.keys())[0]
-					for account, amount in accounts.items():
+					for account, amount in iteritems(accounts):
 						self.party_adjustment_accounts.add(account)
 						self.party_adjustment_details.setdefault(party, {})
 						self.party_adjustment_details[party].setdefault(account, 0)
@@ -431,7 +432,7 @@ class PartyLedgerSummaryReport(object):
 				elif len(accounts) == 1 and not has_irrelevant_entry:
 					account = list(accounts.keys())[0]
 					self.party_adjustment_accounts.add(account)
-					for party, amount in parties.items():
+					for party, amount in iteritems(parties):
 						self.party_adjustment_details.setdefault(party, {})
 						self.party_adjustment_details[party].setdefault(account, 0)
 						self.party_adjustment_details[party][account] += amount

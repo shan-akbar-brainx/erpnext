@@ -141,30 +141,27 @@
   },
   {
    "fieldname": "employee_user_id",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "hidden": 1,
-   "label": "Employee User Id",
-   "options": "User"
+   "label": "Employee User Id"
   },
   {
    "fieldname": "type_of_call",
-   "fieldtype": "Link",
-   "label": "Type Of Call",
-   "options": "Telephony Call Type"
+   "fieldtype": "Data",
+   "label": "Type Of Call"
   },
   {
    "depends_on": "to",
    "fieldname": "call_received_by",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Call Received By",
-   "options": "Employee",
    "read_only": 1
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-14 02:59:22.503202",
+ "modified": "2022-02-25 14:37:48.575230",
  "modified_by": "Administrator",
  "module": "Telephony",
  "name": "Call Log",

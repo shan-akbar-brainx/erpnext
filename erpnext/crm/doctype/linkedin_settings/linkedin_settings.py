@@ -2,14 +2,13 @@
 # For license information, please see license.txt
 
 
-from urllib.parse import urlencode
-
 import frappe
 import requests
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_url_to_form
 from frappe.utils.file_manager import get_file_path
+from six.moves.urllib.parse import urlencode
 
 
 class LinkedInSettings(Document):
@@ -72,7 +71,7 @@ class LinkedInSettings(Document):
 			if media_id:
 				return self.post_text(text, title, media_id=media_id)
 			else:
-				self.log_error("LinkedIn: Failed to upload media")
+				frappe.log_error("Failed to upload media.", "LinkedIn Upload Error")
 
 	def upload_image(self, media):
 		media = get_file_path(media)

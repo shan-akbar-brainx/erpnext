@@ -56,5 +56,8 @@ def make_new_website_item(item: str) -> Union[str, None]:
 		web_item = make_website_item(doc)  # returns [website_item.name, item_name]
 		return web_item[0]
 	except Exception:
-		doc.log_error("Website Item creation failed")
+		title = f"{item}: Error while converting to Website Item "
+		frappe.log_error(
+			title + "for Item Card Group Template" + "\n\n" + frappe.get_traceback(), title=title
+		)
 		return None

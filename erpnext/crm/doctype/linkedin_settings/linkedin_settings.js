@@ -37,7 +37,7 @@ frappe.ui.form.on('LinkedIn Settings', {
 			let msg,color;
 
 			if (days>0){
-				msg = __("Your Session will be expire in {0} days.", [days]);
+				msg = __("Your Session will be expire in ") + days + __(" days.");
 				color = "green";
 			}
 			else {

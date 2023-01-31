@@ -1,3 +1,5 @@
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -15,7 +17,6 @@ test_dependencies = ["Item"]
 class TestVariantSelector(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
-		super().setUpClass()
 		template_item = make_item(
 			"Test-Tshirt-Temp",
 			{

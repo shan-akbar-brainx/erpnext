@@ -24,7 +24,9 @@ erpnext.ProductView =  class {
 		this.prepare_search();
 		this.prepare_view_toggler();
 
-		new erpnext.ProductSearch();
+		frappe.require('/assets/js/e-commerce.min.js', function() {
+			new erpnext.ProductSearch();
+		});
 	}
 
 	prepare_view_toggler() {
@@ -101,11 +103,13 @@ erpnext.ProductView =  class {
 		let me = this;
 		this.prepare_product_area_wrapper("grid");
 
-		new erpnext.ProductGrid({
-			items: items,
-			products_section: $("#products-grid-area"),
-			settings: settings,
-			preference: me.preference
+		frappe.require('/assets/js/e-commerce.min.js', function() {
+			new erpnext.ProductGrid({
+				items: items,
+				products_section: $("#products-grid-area"),
+				settings: settings,
+				preference: me.preference
+			});
 		});
 	}
 
@@ -113,11 +117,13 @@ erpnext.ProductView =  class {
 		let me = this;
 		this.prepare_product_area_wrapper("list");
 
-		new erpnext.ProductList({
-			items: items,
-			products_section: $("#products-list-area"),
-			settings: settings,
-			preference: me.preference
+		frappe.require('/assets/js/e-commerce.min.js', function() {
+			new erpnext.ProductList({
+				items: items,
+				products_section: $("#products-list-area"),
+				settings: settings,
+				preference: me.preference
+			});
 		});
 	}
 

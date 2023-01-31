@@ -2,10 +2,9 @@
 # For license information, please see license.txt
 
 
-from functools import reduce
-
 import frappe
 from frappe.utils import flt
+from six.moves import reduce
 
 from erpnext.controllers.status_updater import StatusUpdater
 
@@ -58,10 +57,18 @@ class BankTransaction(StatusUpdater):
 
 	def clear_linked_payment_entries(self, for_cancel=False):
 		for payment_entry in self.payment_entries:
-			if payment_entry.payment_document == "Sales Invoice":
-				self.clear_sales_invoice(payment_entry, for_cancel=for_cancel)
-			elif payment_entry.payment_document in get_doctypes_for_bank_reconciliation():
+			if payment_entry.payment_document in [
+				"Payment Entry",
+				"Journal Entry",
+				"Purchase Invoice",
+				"Expense Claim",
+				"Loan Repayment",
+				"Loan Disbursement",
+			]:
 				self.clear_simple_entry(payment_entry, for_cancel=for_cancel)
+
+			elif payment_entry.payment_document == "Sales Invoice":
+				self.clear_sales_invoice(payment_entry, for_cancel=for_cancel)
 
 	def clear_simple_entry(self, payment_entry, for_cancel=False):
 		if payment_entry.payment_document == "Payment Entry":
@@ -85,12 +92,6 @@ class BankTransaction(StatusUpdater):
 			"clearance_date",
 			clearance_date,
 		)
-
-
-@frappe.whitelist()
-def get_doctypes_for_bank_reconciliation():
-	"""Get Bank Reconciliation doctypes from all the apps"""
-	return frappe.get_hooks("bank_reconciliation_doctypes")
 
 
 def get_reconciled_bank_transactions(payment_entry):

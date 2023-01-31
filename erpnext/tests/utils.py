@@ -76,21 +76,16 @@ def execute_script_report(
 	if default_filters is None:
 		default_filters = {}
 
-	test_filters = []
 	report_execute_fn = frappe.get_attr(
 		get_report_module_dotted_path(module, report_name) + ".execute"
 	)
 	report_filters = frappe._dict(default_filters).copy().update(filters)
 
-	test_filters.append(report_filters)
+	report_data = report_execute_fn(report_filters)
 
 	if optional_filters:
 		for key, value in optional_filters.items():
-			test_filters.append(report_filters.copy().update({key: value}))
+			filter_with_optional_param = report_filters.copy().update({key: value})
+			report_execute_fn(filter_with_optional_param)
 
-	for test_filter in test_filters:
-		try:
-			report_execute_fn(test_filter)
-		except Exception:
-			print(f"Report failed to execute with filters: {test_filter}")
-			raise
+	return report_data

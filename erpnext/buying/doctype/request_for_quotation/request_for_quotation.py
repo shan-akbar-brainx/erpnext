@@ -12,6 +12,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import get_url
 from frappe.utils.print_format import download_pdf
 from frappe.utils.user import get_user_fullname
+from six import string_types
 
 from erpnext.accounts.party import get_party_account_currency, get_party_details
 from erpnext.buying.utils import validate_for_items
@@ -31,7 +32,7 @@ class RequestforQuotation(BuyingController):
 
 		if self.docstatus < 1:
 			# after amend and save, status still shows as cancelled, until submit
-			self.db_set("status", "Draft")
+			frappe.db.set(self, "status", "Draft")
 
 	def validate_duplicate_supplier(self):
 		supplier_list = [d.supplier for d in self.suppliers]
@@ -73,14 +74,14 @@ class RequestforQuotation(BuyingController):
 			)
 
 	def on_submit(self):
-		self.db_set("status", "Submitted")
+		frappe.db.set(self, "status", "Submitted")
 		for supplier in self.suppliers:
 			supplier.email_sent = 0
 			supplier.quote_status = "Pending"
 		self.send_to_supplier()
 
 	def on_cancel(self):
-		self.db_set("status", "Cancelled")
+		frappe.db.set(self, "status", "Cancelled")
 
 	@frappe.whitelist()
 	def get_supplier_email_preview(self, supplier):
@@ -216,7 +217,6 @@ class RequestforQuotation(BuyingController):
 			recipients=data.email_id,
 			sender=sender,
 			attachments=attachments,
-			print_format=self.meta.default_print_format or "Standard",
 			send_email=True,
 			doctype=self.doctype,
 			name=self.name,
@@ -225,7 +225,9 @@ class RequestforQuotation(BuyingController):
 		frappe.msgprint(_("Email Sent to Supplier {0}").format(data.supplier))
 
 	def get_attachments(self):
-		return [d.name for d in get_attachments(self.doctype, self.name)]
+		attachments = [d.name for d in get_attachments(self.doctype, self.name)]
+		attachments.append(frappe.attach_print(self.doctype, self.name, doc=self))
+		return attachments
 
 	def update_rfq_supplier_status(self, sup_name=None):
 		for supplier in self.suppliers:
@@ -322,7 +324,7 @@ def make_supplier_quotation_from_rfq(source_name, target_doc=None, for_supplier=
 # This method is used to make supplier quotation from supplier's portal.
 @frappe.whitelist()
 def create_supplier_quotation(doc):
-	if isinstance(doc, str):
+	if isinstance(doc, string_types):
 		doc = json.loads(doc)
 
 	try:
@@ -388,17 +390,10 @@ def create_rfq_items(sq_doc, supplier, data):
 
 
 @frappe.whitelist()
-def get_pdf(doctype, name, supplier, print_format=None, language=None, letter_head=None):
-	# permissions get checked in `download_pdf`
-	if doc := get_rfq_doc(doctype, name, supplier):
-		download_pdf(
-			doctype,
-			name,
-			print_format,
-			doc=doc,
-			language=language,
-			letter_head=letter_head or None,
-		)
+def get_pdf(doctype, name, supplier):
+	doc = get_rfq_doc(doctype, name, supplier)
+	if doc:
+		download_pdf(doctype, name, doc=doc)
 
 
 def get_rfq_doc(doctype, name, supplier):

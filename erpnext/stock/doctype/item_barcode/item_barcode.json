@@ -6,8 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "barcode",
-  "barcode_type",
-  "uom"
+  "barcode_type"
  ],
  "fields": [
   {
@@ -26,13 +25,6 @@
    "in_list_view": 1,
    "label": "Barcode Type",
    "options": "\nEAN\nUPC-A"
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "UOM",
-   "options": "UOM"
   }
  ],
  "istable": 1,

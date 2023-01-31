@@ -6,7 +6,10 @@ import unittest
 import frappe
 
 from erpnext.loan_management.doctype.loan.test_loan import create_loan_accounts, create_loan_type
-from erpnext.setup.doctype.employee.test_employee import make_employee
+from erpnext.payroll.doctype.salary_structure.test_salary_structure import (
+	make_employee,
+	make_salary_structure,
+)
 
 
 class TestLoanApplication(unittest.TestCase):
@@ -29,6 +32,9 @@ class TestLoanApplication(unittest.TestCase):
 			18,
 		)
 		self.applicant = make_employee("kate_loan@loan.com", "_Test Company")
+		make_salary_structure(
+			"Test Salary Structure Loan", "Monthly", employee=self.applicant, currency="INR"
+		)
 		self.create_loan_application()
 
 	def create_loan_application(self):

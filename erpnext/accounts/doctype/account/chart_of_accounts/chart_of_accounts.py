@@ -7,6 +7,7 @@ import os
 import frappe
 from frappe.utils import cstr
 from frappe.utils.nestedset import rebuild_tree
+from six import iteritems
 from unidecode import unidecode
 
 
@@ -18,7 +19,7 @@ def create_charts(
 		accounts = []
 
 		def _import_accounts(children, parent, root_type, root_account=False):
-			for account_name, child in children.items():
+			for account_name, child in iteritems(children):
 				if root_account:
 					root_type = child.get("root_type")
 
@@ -234,7 +235,7 @@ def validate_bank_account(coa, bank_account):
 	if chart:
 
 		def _get_account_names(account_master):
-			for account_name, child in account_master.items():
+			for account_name, child in iteritems(account_master):
 				if account_name not in ["account_number", "account_type", "root_type", "is_group", "tax_rate"]:
 					accounts.append(account_name)
 
@@ -258,7 +259,7 @@ def build_tree_from_json(chart_template, chart_data=None, from_coa_importer=Fals
 
 	def _import_accounts(children, parent):
 		"""recursively called to form a parent-child based list of dict from chart template"""
-		for account_name, child in children.items():
+		for account_name, child in iteritems(children):
 			account = {}
 			if account_name in [
 				"account_name",

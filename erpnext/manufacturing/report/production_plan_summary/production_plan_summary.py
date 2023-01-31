@@ -3,7 +3,6 @@
 
 
 import frappe
-from frappe import _
 from frappe.utils import flt
 
 
@@ -115,28 +114,28 @@ def get_purchase_order_details(filters, order_details):
 def get_column(filters):
 	return [
 		{
-			"label": _("Finished Good"),
+			"label": "Finished Good",
 			"fieldtype": "Link",
 			"fieldname": "item_code",
 			"width": 300,
 			"options": "Item",
 		},
-		{"label": _("Item Name"), "fieldtype": "data", "fieldname": "item_name", "width": 100},
+		{"label": "Item Name", "fieldtype": "data", "fieldname": "item_name", "width": 100},
 		{
-			"label": _("Document Type"),
+			"label": "Document Type",
 			"fieldtype": "Link",
 			"fieldname": "document_type",
 			"width": 150,
 			"options": "DocType",
 		},
 		{
-			"label": _("Document Name"),
+			"label": "Document Name",
 			"fieldtype": "Dynamic Link",
 			"fieldname": "document_name",
 			"width": 150,
 		},
-		{"label": _("BOM Level"), "fieldtype": "Int", "fieldname": "bom_level", "width": 100},
-		{"label": _("Order Qty"), "fieldtype": "Float", "fieldname": "qty", "width": 120},
-		{"label": _("Received Qty"), "fieldtype": "Float", "fieldname": "produced_qty", "width": 160},
-		{"label": _("Pending Qty"), "fieldtype": "Float", "fieldname": "pending_qty", "width": 110},
+		{"label": "BOM Level", "fieldtype": "Int", "fieldname": "bom_level", "width": 100},
+		{"label": "Order Qty", "fieldtype": "Float", "fieldname": "qty", "width": 120},
+		{"label": "Received Qty", "fieldtype": "Float", "fieldname": "produced_qty", "width": 160},
+		{"label": "Pending Qty", "fieldtype": "Float", "fieldname": "pending_qty", "width": 110},
 	]

@@ -3,7 +3,6 @@
 
 
 import frappe
-from frappe import _
 from frappe.query_builder.functions import IfNull
 from frappe.utils import cint
 
@@ -101,65 +100,59 @@ def get_columns():
 	columns = [
 		{
 			"fieldname": "work_order",
-			"label": _("Work Order"),
+			"label": "Work Order",
 			"fieldtype": "Link",
 			"options": "Work Order",
 			"width": 110,
 		},
-		{"fieldname": "bom_no", "label": _("BOM"), "fieldtype": "Link", "options": "BOM", "width": 120},
+		{"fieldname": "bom_no", "label": "BOM", "fieldtype": "Link", "options": "BOM", "width": 120},
 		{
 			"fieldname": "description",
-			"label": _("Description"),
+			"label": "Description",
 			"fieldtype": "Data",
 			"options": "",
 			"width": 230,
 		},
 		{
 			"fieldname": "item_code",
-			"label": _("Item Code"),
+			"label": "Item Code",
 			"fieldtype": "Link",
 			"options": "Item",
 			"width": 110,
 		},
 		{
 			"fieldname": "source_warehouse",
-			"label": _("Source Warehouse"),
+			"label": "Source Warehouse",
 			"fieldtype": "Link",
 			"options": "Warehouse",
 			"width": 110,
 		},
-		{
-			"fieldname": "qty",
-			"label": _("Qty to Build"),
-			"fieldtype": "Data",
-			"options": "",
-			"width": 110,
-		},
-		{"fieldname": "status", "label": _("Status"), "fieldtype": "Data", "options": "", "width": 100},
+		{"fieldname": "qty", "label": "Qty to Build", "fieldtype": "Data", "options": "", "width": 110},
+		{"fieldname": "status", "label": "Status", "fieldtype": "Data", "options": "", "width": 100},
 		{
 			"fieldname": "req_items",
-			"label": _("# Req'd Items"),
+			"label": "# Req'd Items",
 			"fieldtype": "Data",
 			"options": "",
 			"width": 105,
 		},
 		{
 			"fieldname": "instock",
-			"label": _("# In Stock"),
+			"label": "# In Stock",
 			"fieldtype": "Data",
 			"options": "",
 			"width": 105,
 		},
 		{
 			"fieldname": "buildable_qty",
-			"label": _("Buildable Qty"),
+			"label": "Buildable Qty",
 			"fieldtype": "Data",
 			"options": "",
 			"width": 100,
 		},
 		{
 			"fieldname": "ready_to_build",
-			"label": _("Build All?"),
+			"label": "Build All?",
 			"fieldtype": "Data",
 			"options": "",
 			"width": 90,

@@ -102,5 +102,3 @@ frappe.query_reports["Stock Balance"] = {
 		return value;
 	}
 };
-
-erpnext.utils.add_inventory_dimensions('Stock Balance', 8);

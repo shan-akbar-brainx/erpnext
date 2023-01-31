@@ -1,6 +1,7 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+
 import frappe
 import os
 import json
@@ -49,7 +50,7 @@ def make_custom_fields(update=True):
 			dict(
 				fieldname="exempt_from_sales_tax",
 				fieldtype="Check",
-				insert_after="dn_required",
+				insert_after="represents_company",
 				label="Is customer exempted from sales tax?",
 			)
 		],
